@@ -202,10 +202,10 @@ export const LeaveRequestsPage: React.FC = () => {
                 <td className="px-4 py-3.5 font-bold text-slate-900">{l.totalDays} Day(s)</td>
                 <td className="px-4 py-3.5 text-slate-600 max-w-xs truncate">{l.reason}</td>
                 <td className="px-4 py-3.5"><StatusBadge status={l.status} /></td>
-                {isManager && (
-                  <td className="px-4 py-3.5">
-                    {l.status === 'pending' ? (
-                      <div className="flex items-center gap-2">
+                <td className="px-4 py-3.5">
+                  <div className="flex items-center gap-2">
+                    {l.status === 'pending' && isManager && (
+                      <>
                         <button
                           onClick={() => handleApprove(l.id)}
                           className="p-1 bg-emerald-100 text-emerald-700 rounded-md hover:bg-emerald-200 transition-all"
@@ -220,12 +220,24 @@ export const LeaveRequestsPage: React.FC = () => {
                         >
                           <X size={14} />
                         </button>
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 text-[10px]">Processed</span>
+                      </>
                     )}
-                  </td>
-                )}
+                    <button
+                      onClick={async () => {
+                        if (!window.confirm('Delete this leave application?')) return;
+                        if (user?.company_id) {
+                          await supabase.from('leaves').delete().eq('id', l.id);
+                        }
+                        setLeaves(prev => prev.filter(item => item.id !== l.id));
+                        toast.success('Leave application deleted');
+                      }}
+                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
+                      title="Delete Leave Application"
+                    >
+                      <XCircle size={14} />
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

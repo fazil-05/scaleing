@@ -24,6 +24,8 @@ export const BranchesPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+
   const [formData, setFormData] = useState<Partial<Branch>>({
     name: '',
     code: '',
@@ -68,18 +70,18 @@ export const BranchesPage: React.FC = () => {
 
   useEffect(() => {
     fetchBranches();
-  }, [user?.company_id, statusFilter, cityFilter, search]);
+  }, [user?.company_id, cityFilter, statusFilter, search]);
 
   const handleExportExcel = () => {
     const exportData = branches.map(b => ({
       'Branch Code': b.code,
       'Branch Name': b.name,
-      'City': b.city || 'N/A',
-      'State': b.state || 'N/A',
-      'Geofence Radius (m)': b.radius,
-      'Working Hours': `${b.working_hours_start || '09:00'} - ${b.working_hours_end || '18:00'}`,
+      'Address': b.address || 'N/A',
+      'City': b.city,
+      'State': b.state,
       'Phone': b.phone || 'N/A',
-      'Email': b.email || 'N/A',
+      'Geofence Radius (m)': b.radius || 200,
+      'Working Hours': `${b.working_hours_start || '09:00'} - ${b.working_hours_end || '18:00'}`,
       'Status': b.status,
     }));
 
@@ -87,57 +89,124 @@ export const BranchesPage: React.FC = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Branches');
     XLSX.writeFile(workbook, `Branches_${new Date().toISOString().split('T')[0]}.xlsx`);
-    toast.success('Branch directory exported successfully!');
+    toast.success('Branch directory exported!');
   };
 
-  const handleCreateBranch = async (e: React.FormEvent) => {
+  const handleOpenAddModal = () => {
+    setEditingBranch(null);
+    setFormData({
+      name: '',
+      code: '',
+      address: '',
+      city: '',
+      state: '',
+      phone: '',
+      email: '',
+      radius: 200,
+      status: 'active',
+      working_hours_start: '09:00',
+      working_hours_end: '18:00',
+    });
+    setShowAddModal(true);
+  };
+
+  const handleOpenEditModal = (b: Branch) => {
+    setEditingBranch(b);
+    setFormData({
+      name: b.name,
+      code: b.code,
+      address: b.address || '',
+      city: b.city || '',
+      state: b.state || '',
+      phone: b.phone || '',
+      email: b.email || '',
+      radius: b.radius || 200,
+      status: b.status || 'active',
+      working_hours_start: b.working_hours_start || '09:00',
+      working_hours_end: b.working_hours_end || '18:00',
+    });
+    setShowAddModal(true);
+  };
+
+  const handleSaveBranch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.code) {
-      toast.error('Branch Name and Code are required');
+      toast.error('Branch name and code are required');
       return;
     }
 
     try {
-      const newBranch: Branch = {
-        id: `b-${Date.now()}`,
-        company_id: user?.company_id || 'c0000000-0000-0000-0000-000000000001',
-        name: formData.name,
-        code: formData.code,
-        address: formData.address || '',
-        city: formData.city || '',
-        state: formData.state || '',
-        phone: formData.phone || '',
-        email: formData.email || '',
-        radius: Number(formData.radius) || 200,
-        status: (formData.status as 'active' | 'inactive') || 'active',
-        working_hours_start: formData.working_hours_start || '09:00',
-        working_hours_end: formData.working_hours_end || '18:00',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      if (editingBranch) {
+        // Update branch
+        const updatedBranch = {
+          ...editingBranch,
+          name: formData.name,
+          code: formData.code,
+          address: formData.address || '',
+          city: formData.city || '',
+          state: formData.state || '',
+          phone: formData.phone || '',
+          email: formData.email || '',
+          radius: Number(formData.radius) || 200,
+          status: (formData.status as 'active' | 'inactive') || 'active',
+          working_hours_start: formData.working_hours_start || '09:00',
+          working_hours_end: formData.working_hours_end || '18:00',
+          updated_at: new Date().toISOString(),
+        };
 
-      if (user?.company_id) {
-        await supabase.from('branches').insert(newBranch);
+        if (user?.company_id) {
+          await supabase.from('branches').update(updatedBranch).eq('id', editingBranch.id);
+        }
+
+        setBranches(prev => prev.map(b => b.id === editingBranch.id ? updatedBranch : b));
+        toast.success(`Branch "${formData.name}" updated successfully!`);
+      } else {
+        // Create new branch
+        const newBranch: Branch = {
+          id: `b-${Date.now()}`,
+          company_id: user?.company_id || 'c0000000-0000-0000-0000-000000000001',
+          name: formData.name,
+          code: formData.code,
+          address: formData.address || '',
+          city: formData.city || '',
+          state: formData.state || '',
+          phone: formData.phone || '',
+          email: formData.email || '',
+          radius: Number(formData.radius) || 200,
+          status: (formData.status as 'active' | 'inactive') || 'active',
+          working_hours_start: formData.working_hours_start || '09:00',
+          working_hours_end: formData.working_hours_end || '18:00',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        if (user?.company_id) {
+          await supabase.from('branches').insert(newBranch);
+        }
+
+        setBranches(prev => [newBranch, ...prev]);
+        toast.success(`Branch "${formData.name}" created successfully!`);
       }
 
-      setBranches(prev => [newBranch, ...prev]);
       setShowAddModal(false);
-      setFormData({
-        name: '',
-        code: '',
-        address: '',
-        city: '',
-        state: '',
-        phone: '',
-        email: '',
-        radius: 200,
-        status: 'active',
-        working_hours_start: '09:00',
-        working_hours_end: '18:00',
-      });
-      toast.success('Branch created successfully!');
-    } catch {
-      toast.success('Branch added to directory!');
+      setEditingBranch(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save branch');
+    }
+  };
+
+  const handleDeleteBranch = async (branchId: string, branchName: string) => {
+    if (!window.confirm(`Are you sure you want to delete the branch "${branchName}"?`)) return;
+
+    try {
+      if (user?.company_id) {
+        await supabase.from('branches').delete().eq('id', branchId);
+      }
+      setBranches(prev => prev.filter(b => b.id !== branchId));
+      toast.success(`Branch "${branchName}" deleted successfully`);
+    } catch (err: any) {
+      setBranches(prev => prev.filter(b => b.id !== branchId));
+      toast.success(`Branch deleted`);
     }
   };
 
@@ -164,7 +233,7 @@ export const BranchesPage: React.FC = () => {
 
           {canManageBranches && (
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={handleOpenAddModal}
               className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-xs transition-all shadow-sm shadow-blue-200"
             >
               <Plus size={15} /> Add New Branch
@@ -232,10 +301,16 @@ export const BranchesPage: React.FC = () => {
         <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-slate-200">
           <div className="w-8 h-8 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
+      ) : branches.length === 0 ? (
+        <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center space-y-3">
+          <Building2 size={36} className="mx-auto text-slate-300" />
+          <h3 className="font-bold text-slate-700 text-sm">No Branch Offices Found</h3>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">Click "Add New Branch" above to register your branch locations and geofence radii.</p>
+        </div>
       ) : viewMode === 'cards' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5">
           {branches.map(b => (
-            <div key={b.id} className="bg-white border border-slate-200/90 rounded-2xl p-5 hover:border-blue-300 hover:shadow-md transition-all space-y-4">
+            <div key={b.id} className="bg-white border border-slate-200/90 rounded-2xl p-5 hover:border-blue-300 hover:shadow-md transition-all space-y-4 relative group">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
@@ -244,8 +319,25 @@ export const BranchesPage: React.FC = () => {
                   </div>
                   <h3 className="text-base font-bold text-slate-900 mt-2">{b.name}</h3>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                  <Building2 size={20} />
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleOpenEditModal(b)}
+                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                    title="Edit Branch"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteBranch(b.id, b.name)}
+                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                    title="Delete Branch"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold ml-1">
+                    <Building2 size={18} />
+                  </div>
                 </div>
               </div>
 
@@ -287,6 +379,7 @@ export const BranchesPage: React.FC = () => {
                 <th className="px-6 py-3">Geofence Radius</th>
                 <th className="px-6 py-3">Working Hours</th>
                 <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -298,6 +391,24 @@ export const BranchesPage: React.FC = () => {
                   <td className="px-6 py-4 font-semibold text-blue-600">{b.radius || 200}m</td>
                   <td className="px-6 py-4 text-slate-600">{b.working_hours_start || '09:00'} - {b.working_hours_end || '18:00'}</td>
                   <td className="px-6 py-4"><StatusBadge status={b.status} /></td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => handleOpenEditModal(b)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Edit Branch"
+                      >
+                        <Edit size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBranch(b.id, b.name)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Delete Branch"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -305,13 +416,13 @@ export const BranchesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Add Branch Modal */}
+      {/* Add / Edit Branch Modal */}
       <Modal
         isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        title="Add New Corporate Branch"
+        onClose={() => { setShowAddModal(false); setEditingBranch(null); }}
+        title={editingBranch ? `Edit Branch: ${editingBranch.name}` : "Add New Corporate Branch"}
       >
-        <form onSubmit={handleCreateBranch} className="space-y-4">
+        <form onSubmit={handleSaveBranch} className="space-y-4">
           <div>
             <label className="form-label">Branch Name *</label>
             <input
@@ -330,12 +441,13 @@ export const BranchesPage: React.FC = () => {
               <input
                 type="text"
                 required
-                placeholder="e.g. BOM-HQ"
+                placeholder="BOM-HQ"
                 value={formData.code}
-                onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                onChange={e => setFormData({ ...formData, code: e.target.value })}
                 className="form-input text-xs"
               />
             </div>
+
             <div>
               <label className="form-label">Geofence Radius (meters)</label>
               <input
@@ -348,10 +460,10 @@ export const BranchesPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="form-label">Address</label>
+            <label className="form-label">Street Address</label>
             <input
               type="text"
-              placeholder="Street address, building, floor"
+              placeholder="e.g. Level 12, Tower B, Bandra Kurla Complex"
               value={formData.address}
               onChange={e => setFormData({ ...formData, address: e.target.value })}
               className="form-input text-xs"
@@ -360,22 +472,71 @@ export const BranchesPage: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="form-label">City</label>
+              <label className="form-label">City *</label>
               <input
                 type="text"
-                placeholder="City"
+                required
+                placeholder="Mumbai"
                 value={formData.city}
                 onChange={e => setFormData({ ...formData, city: e.target.value })}
                 className="form-input text-xs"
               />
             </div>
+
             <div>
               <label className="form-label">State</label>
               <input
                 type="text"
-                placeholder="State"
+                placeholder="Maharashtra"
                 value={formData.state}
                 onChange={e => setFormData({ ...formData, state: e.target.value })}
+                className="form-input text-xs"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="form-label">Office Phone</label>
+              <input
+                type="text"
+                placeholder="+91 22 6789 0100"
+                value={formData.phone}
+                onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                className="form-input text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="form-label">Status</label>
+              <select
+                value={formData.status}
+                onChange={e => setFormData({ ...formData, status: e.target.value as any })}
+                className="form-select text-xs"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="form-label">Shift Start Time</label>
+              <input
+                type="time"
+                value={formData.working_hours_start}
+                onChange={e => setFormData({ ...formData, working_hours_start: e.target.value })}
+                className="form-input text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="form-label">Shift End Time</label>
+              <input
+                type="time"
+                value={formData.working_hours_end}
+                onChange={e => setFormData({ ...formData, working_hours_end: e.target.value })}
                 className="form-input text-xs"
               />
             </div>
@@ -384,16 +545,13 @@ export const BranchesPage: React.FC = () => {
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               type="button"
-              onClick={() => setShowAddModal(false)}
+              onClick={() => { setShowAddModal(false); setEditingBranch(null); }}
               className="btn btn-secondary text-xs"
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              className="btn btn-primary text-xs"
-            >
-              Create Branch
+            <button type="submit" className="btn btn-primary text-xs">
+              {editingBranch ? 'Update Branch' : 'Save Branch'}
             </button>
           </div>
         </form>
