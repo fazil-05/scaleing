@@ -85,7 +85,7 @@ const DEMO_SOPS: SOP[] = [
           .select('*')
           .eq('company_id', user.company_id);
 
-        setCategories(catData && catData.length > 0 ? (catData as SOPCategory[]) : DEMO_CATEGORIES);
+        setCategories((catData || []) as SOPCategory[]);
 
         let query = supabase
           .from('sops')
@@ -97,10 +97,9 @@ const DEMO_SOPS: SOP[] = [
         if (search) query = query.ilike('title', `%${search}%`);
 
         const { data: sopData } = await query;
-        setSops(sopData && sopData.length > 0 ? (sopData as SOP[]) : DEMO_SOPS);
+        setSops((sopData || []) as SOP[]);
       } catch (err) {
-        setCategories(DEMO_CATEGORIES);
-        setSops(DEMO_SOPS);
+        console.warn('Real SOP fetch error:', err);
       } finally {
         setLoading(false);
       }

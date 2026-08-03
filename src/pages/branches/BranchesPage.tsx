@@ -14,97 +14,6 @@ import {
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
-const DEMO_BRANCHES: Branch[] = [
-  {
-    id: 'b0000000-0000-0000-0000-000000000001',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    name: 'Headquarters — Mumbai',
-    code: 'BOM-HQ',
-    address: 'Level 12, Tower B, Bandra Kurla Complex',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    pincode: '400051',
-    phone: '+91 22 6789 0100',
-    email: 'mumbai.hq@acmeglobal.com',
-    latitude: 19.066,
-    longitude: 72.868,
-    radius: 200,
-    status: 'active',
-    working_hours_start: '09:00',
-    working_hours_end: '18:00',
-    working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    late_threshold_minutes: 15,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'b0000000-0000-0000-0000-000000000002',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    name: 'Tech Hub — Bengaluru',
-    code: 'BLR-02',
-    address: 'Prestige Tech Park, Outer Ring Road, Bellandur',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    pincode: '560103',
-    phone: '+91 80 4567 8900',
-    email: 'blr.tech@acmeglobal.com',
-    latitude: 12.926,
-    longitude: 77.684,
-    radius: 250,
-    status: 'active',
-    working_hours_start: '09:30',
-    working_hours_end: '18:30',
-    working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    late_threshold_minutes: 15,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'b0000000-0000-0000-0000-000000000003',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    name: 'North Office — New Delhi',
-    code: 'DEL-03',
-    address: 'Statesman House, Barakhamba Road, Connaught Place',
-    city: 'New Delhi',
-    state: 'Delhi',
-    pincode: '110001',
-    phone: '+91 11 2345 6789',
-    email: 'delhi.office@acmeglobal.com',
-    latitude: 28.628,
-    longitude: 77.224,
-    radius: 200,
-    status: 'active',
-    working_hours_start: '09:00',
-    working_hours_end: '18:00',
-    working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    late_threshold_minutes: 15,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'b0000000-0000-0000-0000-000000000004',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    name: 'West Zone — Pune',
-    code: 'PUN-04',
-    address: 'Phase 1, Hinjewadi Rajiv Gandhi IT Park',
-    city: 'Pune',
-    state: 'Maharashtra',
-    pincode: '411057',
-    phone: '+91 20 8901 2345',
-    email: 'pune.branch@acmeglobal.com',
-    latitude: 18.591,
-    longitude: 73.738,
-    radius: 150,
-    status: 'active',
-    working_hours_start: '09:00',
-    working_hours_end: '18:00',
-    working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    late_threshold_minutes: 15,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-];
-
 export const BranchesPage: React.FC = () => {
   const { user } = useAuth();
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -147,13 +56,11 @@ export const BranchesPage: React.FC = () => {
       if (search) query = query.ilike('name', `%${search}%`);
 
       const { data, error } = await query;
-      if (error || !data || data.length === 0) {
-        setBranches(DEMO_BRANCHES);
-      } else {
+      if (!error && data) {
         setBranches(data as Branch[]);
       }
-    } catch {
-      setBranches(DEMO_BRANCHES);
+    } catch (err) {
+      console.warn('Real branches fetch error:', err);
     } finally {
       setLoading(false);
     }

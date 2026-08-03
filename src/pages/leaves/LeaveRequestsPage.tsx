@@ -10,11 +10,13 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { supabase } from '@/lib/supabase';
+
 interface LeaveItem {
   id: string;
   employeeName: string;
   employeeCode: string;
-  leaveType: 'Casual Leave' | 'Sick Leave' | 'Earned Leave' | 'Maternity / Paternity';
+  leaveType: string;
   fromDate: string;
   toDate: string;
   totalDays: number;
@@ -23,16 +25,10 @@ interface LeaveItem {
   appliedOn: string;
 }
 
-const MOCK_LEAVES: LeaveItem[] = [
-  { id: 'l-1', employeeName: 'Sophia Sterling', employeeCode: 'EMP-004', leaveType: 'Casual Leave', fromDate: '2026-08-10', toDate: '2026-08-12', totalDays: 3, reason: 'Personal family commitments', status: 'pending', appliedOn: '2026-08-02' },
-  { id: 'l-2', employeeName: 'Rohan Sharma', employeeCode: 'EMP-005', leaveType: 'Sick Leave', fromDate: '2026-08-01', toDate: '2026-08-02', totalDays: 2, reason: 'High fever and medical rest', status: 'approved', appliedOn: '2026-07-31' },
-  { id: 'l-3', employeeName: 'Priya Nair', employeeCode: 'EMP-006', leaveType: 'Earned Leave', fromDate: '2026-08-18', toDate: '2026-08-22', totalDays: 5, reason: 'Annual vacation trip', status: 'approved', appliedOn: '2026-07-25' },
-  { id: 'l-4', employeeName: 'Marcus Brody', employeeCode: 'EMP-003', leaveType: 'Casual Leave', fromDate: '2026-08-05', toDate: '2026-08-05', totalDays: 1, reason: 'Urgent home maintenance', status: 'pending', appliedOn: '2026-08-03' },
-];
-
 export const LeaveRequestsPage: React.FC = () => {
   const { user } = useAuth();
-  const [leaves, setLeaves] = useState<LeaveItem[]>(MOCK_LEAVES);
+  const [leaves, setLeaves] = useState<LeaveItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -41,6 +37,43 @@ export const LeaveRequestsPage: React.FC = () => {
     toDate: '',
     reason: '',
   });
+
+  const fetchLeaves = async () => {
+    if (!user?.company_id) return;
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('leaves')
+        .select('*')
+        .eq('company_id', user.company_id)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const mapped: LeaveItem[] = data.map((l: any) => ({
+          id: l.id,
+          employeeName: user.name || 'Employee',
+          employeeCode: user.employee_code || 'EMP-001',
+          leaveType: l.leave_type || 'Casual Leave',
+          fromDate: l.from_date,
+          toDate: l.to_date,
+          totalDays: l.total_days || 1,
+          reason: l.reason,
+          status: l.status || 'pending',
+          appliedOn: l.created_at ? l.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+        }));
+        setLeaves(mapped);
+      }
+    } catch (err) {
+      console.warn('Real leaves fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchLeaves();
+  }, [user?.company_id]);
 
   const isManager = user?.role && ['super_admin', 'company_admin', 'director', 'branch_manager'].includes(user.role);
 

@@ -28,68 +28,6 @@ const DEMO_EMPLOYEES: Partial<Employee>[] = [
   { id: 'a0000000-0000-0000-0000-000000000001', name: 'Alexander Pierce', employee_code: 'EMP-001', role: 'super_admin' },
 ];
 
-const DEMO_TASKS_LIST: Task[] = [
-  {
-    id: 't0000000-0000-0000-0000-000000000001',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    created_by: 'e0000000-0000-0000-0000-000000000001',
-    assigned_to: 'e0000000-0000-0000-0000-000000000004',
-    title: 'Branch Geofence Audit & Location Calibration',
-    description: 'Verify GPS radius parameters for Mumbai and Delhi main offices.',
-    priority: 'high',
-    status: 'in_progress',
-    due_date: '2026-08-10',
-    completion_percentage: 60,
-    is_milestone: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 't0000000-0000-0000-0000-000000000002',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    created_by: 'e0000000-0000-0000-0000-000000000002',
-    assigned_to: 'e0000000-0000-0000-0000-000000000003',
-    title: 'Review Q3 Staff Performance & AI Reports',
-    description: 'Audit flagged work reports and generate performance review summary.',
-    priority: 'critical',
-    status: 'pending',
-    due_date: '2026-08-15',
-    completion_percentage: 10,
-    is_milestone: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 't0000000-0000-0000-0000-000000000003',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    created_by: 'e0000000-0000-0000-0000-000000000001',
-    assigned_to: 'e0000000-0000-0000-0000-000000000004',
-    title: 'Publish HR Leave & Attendance SOP Policy',
-    description: 'Upload latest HR leave policy document to company SOP library.',
-    priority: 'medium',
-    status: 'assigned',
-    due_date: '2026-08-12',
-    completion_percentage: 30,
-    is_milestone: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 't0000000-0000-0000-0000-000000000004',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    created_by: 'e0000000-0000-0000-0000-000000000003',
-    assigned_to: 'e0000000-0000-0000-0000-000000000001',
-    title: 'Complete System Vercel Deployment & SSL Verification',
-    description: 'Ensure clean domain SSL and SPA rewrites configuration.',
-    priority: 'high',
-    status: 'completed',
-    due_date: '2026-08-03',
-    completion_percentage: 100,
-    is_milestone: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-];
 
 export const TasksPage: React.FC = () => {
   const { user } = useAuth();
@@ -139,13 +77,11 @@ export const TasksPage: React.FC = () => {
 
       const { data, error } = await query.order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) {
-        setTasks(DEMO_TASKS_LIST);
-      } else {
+      if (!error && data) {
         setTasks(data as Task[]);
       }
     } catch (err: any) {
-      setTasks(DEMO_TASKS_LIST);
+      console.warn('Real task fetch error:', err);
     } finally {
       setLoading(false);
     }

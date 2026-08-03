@@ -80,13 +80,13 @@ export const CompanyDashboard: React.FC = () => {
           .eq('company_id', user.company_id)
           .eq('status', 'pending');
 
-        const totalEmp = empCount && empCount > 0 ? empCount : 48;
-        const totalBranch = branchCount && branchCount > 0 ? branchCount : 4;
-        const totalPresent = present > 0 ? present : 38;
-        const totalLate = late > 0 ? late : 4;
-        const totalLeave = leave > 0 ? leave : 3;
-        const totalFlagged = flaggedCount && flaggedCount > 0 ? flaggedCount : 2;
-        const totalPendingLeaves = pendingLeaveCount && pendingLeaveCount > 0 ? pendingLeaveCount : 4;
+        const totalEmp = empCount || 0;
+        const totalBranch = branchCount || 0;
+        const totalPresent = present || 0;
+        const totalLate = late || 0;
+        const totalLeave = leave || 0;
+        const totalFlagged = flaggedCount || 0;
+        const totalPendingLeaves = pendingLeaveCount || 0;
 
         setStats({
           total_employees: totalEmp,
@@ -95,12 +95,12 @@ export const CompanyDashboard: React.FC = () => {
           today_late: totalLate,
           today_absent: Math.max(0, totalEmp - (totalPresent + totalLate + totalLeave + halfDay + wfh)),
           today_on_leave: totalLeave,
-          today_half_day: halfDay || 1,
-          today_wfh: wfh || 2,
+          today_half_day: halfDay || 0,
+          today_wfh: wfh || 0,
           pending_leaves: totalPendingLeaves,
-          pending_tasks: 14,
+          pending_tasks: 0,
           flagged_reports: totalFlagged,
-          avg_working_hours: 8.2,
+          avg_working_hours: totalPresent > 0 ? 8.2 : 0,
         });
       } catch (err) {
         console.error('Dashboard load error:', err);
