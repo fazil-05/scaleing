@@ -14,6 +14,7 @@ import type { UserRole } from './types';
 const LoginPage = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const CompanyDashboard = lazy(() => import('./pages/dashboards/CompanyDashboard').then(m => ({ default: m.CompanyDashboard })));
 const EmployeesPage = lazy(() => import('./pages/employees/EmployeesPage').then(m => ({ default: m.EmployeesPage })));
+const BranchesPage = lazy(() => import('./pages/branches/BranchesPage').then(m => ({ default: m.BranchesPage })));
 const MarkAttendancePage = lazy(() => import('./pages/attendance/MarkAttendancePage').then(m => ({ default: m.MarkAttendancePage })));
 const DailyReportPage = lazy(() => import('./pages/reports/DailyReportPage').then(m => ({ default: m.DailyReportPage })));
 const TasksPage = lazy(() => import('./pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })));
@@ -83,7 +84,7 @@ function AppRoutes() {
         <Route path="/dashboards/employee" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
 
         <Route path="/employees" element={<Suspense fallback={<PageLoader />}><EmployeesPage /></Suspense>} />
-        <Route path="/branches" element={<Suspense fallback={<PageLoader />}><EmployeesPage /></Suspense>} />
+        <Route path="/branches" element={<Suspense fallback={<PageLoader />}><BranchesPage /></Suspense>} />
         <Route path="/attendance/mark" element={<Suspense fallback={<PageLoader />}><MarkAttendancePage /></Suspense>} />
         <Route path="/attendance/live" element={<Suspense fallback={<PageLoader />}><MarkAttendancePage /></Suspense>} />
         <Route path="/reports/daily" element={<Suspense fallback={<PageLoader />}><DailyReportPage /></Suspense>} />
