@@ -13,12 +13,22 @@ import type { UserRole } from './types';
 // Lazy loaded page components
 const LoginPage = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const CompanyDashboard = lazy(() => import('./pages/dashboards/CompanyDashboard').then(m => ({ default: m.CompanyDashboard })));
+const SuperAdminDashboard = lazy(() => import('./pages/dashboards/SuperAdminDashboard').then(m => ({ default: m.SuperAdminDashboard })));
+const DirectorDashboard = lazy(() => import('./pages/dashboards/DirectorDashboard').then(m => ({ default: m.DirectorDashboard })));
+const BranchManagerDashboard = lazy(() => import('./pages/dashboards/BranchManagerDashboard').then(m => ({ default: m.BranchManagerDashboard })));
+const EmployeeDashboard = lazy(() => import('./pages/dashboards/EmployeeDashboard').then(m => ({ default: m.EmployeeDashboard })));
+
 const EmployeesPage = lazy(() => import('./pages/employees/EmployeesPage').then(m => ({ default: m.EmployeesPage })));
 const BranchesPage = lazy(() => import('./pages/branches/BranchesPage').then(m => ({ default: m.BranchesPage })));
 const MarkAttendancePage = lazy(() => import('./pages/attendance/MarkAttendancePage').then(m => ({ default: m.MarkAttendancePage })));
+const LiveMapPage = lazy(() => import('./pages/attendance/LiveMapPage').then(m => ({ default: m.LiveMapPage })));
 const DailyReportPage = lazy(() => import('./pages/reports/DailyReportPage').then(m => ({ default: m.DailyReportPage })));
 const TasksPage = lazy(() => import('./pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })));
 const SOPLibraryPage = lazy(() => import('./pages/sops/SOPLibraryPage').then(m => ({ default: m.SOPLibraryPage })));
+const LeaveRequestsPage = lazy(() => import('./pages/leaves/LeaveRequestsPage').then(m => ({ default: m.LeaveRequestsPage })));
+const PerformancePage = lazy(() => import('./pages/performance/PerformancePage').then(m => ({ default: m.PerformancePage })));
+const CompanySettingsPage = lazy(() => import('./pages/settings/CompanySettingsPage').then(m => ({ default: m.CompanySettingsPage })));
+const AIChatPage = lazy(() => import('./pages/chat/AIChatPage').then(m => ({ default: m.AIChatPage })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,26 +87,26 @@ function AppRoutes() {
           <AppLayout />
         </ProtectedRoute>
       }>
-        <Route path="/dashboards/super-admin" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
+        <Route path="/dashboards/super-admin" element={<Suspense fallback={<PageLoader />}><SuperAdminDashboard /></Suspense>} />
         <Route path="/dashboards/company" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
-        <Route path="/dashboards/director" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
-        <Route path="/dashboards/branch" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
-        <Route path="/dashboards/employee" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
+        <Route path="/dashboards/director" element={<Suspense fallback={<PageLoader />}><DirectorDashboard /></Suspense>} />
+        <Route path="/dashboards/branch" element={<Suspense fallback={<PageLoader />}><BranchManagerDashboard /></Suspense>} />
+        <Route path="/dashboards/employee" element={<Suspense fallback={<PageLoader />}><EmployeeDashboard /></Suspense>} />
 
         <Route path="/employees" element={<Suspense fallback={<PageLoader />}><EmployeesPage /></Suspense>} />
         <Route path="/branches" element={<Suspense fallback={<PageLoader />}><BranchesPage /></Suspense>} />
         <Route path="/attendance/mark" element={<Suspense fallback={<PageLoader />}><MarkAttendancePage /></Suspense>} />
-        <Route path="/attendance/live" element={<Suspense fallback={<PageLoader />}><MarkAttendancePage /></Suspense>} />
+        <Route path="/attendance/live" element={<Suspense fallback={<PageLoader />}><LiveMapPage /></Suspense>} />
         <Route path="/reports/daily" element={<Suspense fallback={<PageLoader />}><DailyReportPage /></Suspense>} />
         <Route path="/reports/audit" element={<Suspense fallback={<PageLoader />}><DailyReportPage /></Suspense>} />
         <Route path="/tasks" element={<Suspense fallback={<PageLoader />}><TasksPage /></Suspense>} />
         <Route path="/sops" element={<Suspense fallback={<PageLoader />}><SOPLibraryPage /></Suspense>} />
         <Route path="/resources" element={<Suspense fallback={<PageLoader />}><SOPLibraryPage /></Suspense>} />
-        <Route path="/leaves" element={<Suspense fallback={<PageLoader />}><DailyReportPage /></Suspense>} />
-        <Route path="/performance" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
-        <Route path="/chat" element={<Suspense fallback={<PageLoader />}><SOPLibraryPage /></Suspense>} />
-        <Route path="/analytics" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
-        <Route path="/settings" element={<Suspense fallback={<PageLoader />}><CompanyDashboard /></Suspense>} />
+        <Route path="/leaves" element={<Suspense fallback={<PageLoader />}><LeaveRequestsPage /></Suspense>} />
+        <Route path="/performance" element={<Suspense fallback={<PageLoader />}><PerformancePage /></Suspense>} />
+        <Route path="/chat" element={<Suspense fallback={<PageLoader />}><AIChatPage /></Suspense>} />
+        <Route path="/analytics" element={<Suspense fallback={<PageLoader />}><DirectorDashboard /></Suspense>} />
+        <Route path="/settings" element={<Suspense fallback={<PageLoader />}><CompanySettingsPage /></Suspense>} />
       </Route>
 
       {/* Fallback Redirect */}
