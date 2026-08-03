@@ -99,13 +99,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedUser = localStorage.getItem('vm_demo_user');
     const savedComp = localStorage.getItem('vm_demo_company');
     if (savedUser && savedComp) {
-      return {
-        user: JSON.parse(savedUser),
-        company: JSON.parse(savedComp),
-        session: null,
-        isAuthenticated: true,
-        isLoading: false,
-      };
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        const parsedComp = JSON.parse(savedComp);
+
+        // Automatically migrate legacy non-UUID IDs (e.g. comp-1001, emp-admin) stored in browser localStorage
+        if (parsedComp.id === 'comp-1001' || !parsedComp.id || parsedComp.id.length < 30) {
+          parsedComp.id = 'c0000000-0000-0000-0000-000000000001';
+          localStorage.setItem('vm_demo_company', JSON.stringify(parsedComp));
+        }
+
+        if (parsedUser.company_id === 'comp-1001' || !parsedUser.company_id || parsedUser.company_id.length < 30) {
+          parsedUser.company_id = 'c0000000-0000-0000-0000-000000000001';
+        }
+        if (parsedUser.id === 'emp-admin' || !parsedUser.id || parsedUser.id.length < 30) {
+          parsedUser.id = 'e0000000-0000-0000-0000-000000000001';
+        }
+        localStorage.setItem('vm_demo_user', JSON.stringify(parsedUser));
+
+        return {
+          user: parsedUser,
+          company: parsedComp,
+          session: null,
+          isAuthenticated: true,
+          isLoading: false,
+        };
+      } catch {
+        localStorage.removeItem('vm_demo_user');
+        localStorage.removeItem('vm_demo_company');
+      }
     }
     return {
       user: null,
