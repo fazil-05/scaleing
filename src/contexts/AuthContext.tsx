@@ -8,7 +8,7 @@ import type { Employee, Company } from '@/types';
 
 // Demo Mock Accounts for local testing & previewing
 const MOCK_COMPANY: Company = {
-  id: 'comp-1001',
+  id: 'c0000000-0000-0000-0000-000000000001',
   name: 'Acme Global Enterprises',
   code: 'ACME',
   email: 'contact@acmeglobal.com',
@@ -20,8 +20,8 @@ const MOCK_COMPANY: Company = {
 
 const MOCK_EMPLOYEES: Record<string, Employee> = {
   'admin@virtualmanager.ai': {
-    id: 'emp-admin',
-    company_id: 'comp-1001',
+    id: 'e0000000-0000-0000-0000-000000000001',
+    company_id: 'c0000000-0000-0000-0000-000000000001',
     employee_code: 'EMP-001',
     name: 'Alexander Pierce',
     email: 'admin@virtualmanager.ai',
@@ -33,8 +33,8 @@ const MOCK_EMPLOYEES: Record<string, Employee> = {
     updated_at: new Date().toISOString(),
   },
   'director@virtualmanager.ai': {
-    id: 'emp-director',
-    company_id: 'comp-1001',
+    id: 'e0000000-0000-0000-0000-000000000002',
+    company_id: 'c0000000-0000-0000-0000-000000000001',
     employee_code: 'EMP-002',
     name: 'Eleanor Vance',
     email: 'director@virtualmanager.ai',
@@ -46,8 +46,8 @@ const MOCK_EMPLOYEES: Record<string, Employee> = {
     updated_at: new Date().toISOString(),
   },
   'manager@virtualmanager.ai': {
-    id: 'emp-manager',
-    company_id: 'comp-1001',
+    id: 'e0000000-0000-0000-0000-000000000003',
+    company_id: 'c0000000-0000-0000-0000-000000000001',
     employee_code: 'EMP-003',
     name: 'Marcus Brody',
     email: 'manager@virtualmanager.ai',
@@ -59,8 +59,8 @@ const MOCK_EMPLOYEES: Record<string, Employee> = {
     updated_at: new Date().toISOString(),
   },
   'employee@virtualmanager.ai': {
-    id: 'emp-staff',
-    company_id: 'comp-1001',
+    id: 'e0000000-0000-0000-0000-000000000004',
+    company_id: 'c0000000-0000-0000-0000-000000000001',
     employee_code: 'EMP-004',
     name: 'Sophia Sterling',
     email: 'employee@virtualmanager.ai',
@@ -167,8 +167,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       // Fallback to Demo Mode if Supabase is placeholder or credentials match demo
       const demoEmp = MOCK_EMPLOYEES[email.toLowerCase()] || {
-        id: 'emp-custom',
-        company_id: 'comp-1001',
+        id: 'e0000000-0000-0000-0000-000000000999',
+        company_id: 'c0000000-0000-0000-0000-000000000001',
         employee_code: 'EMP-999',
         name: email.split('@')[0].toUpperCase(),
         email: email,
