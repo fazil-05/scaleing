@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Brain, Send, Sparkles, User, Bot, RefreshCw, ThumbsUp, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { chatWithAI } from '@/lib/openai';
+
 interface Message {
   id: string;
   sender: 'user' | 'ai';
@@ -14,7 +16,7 @@ interface Message {
 }
 
 export const AIChatPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, company } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'm-1',
@@ -26,7 +28,7 @@ export const AIChatPage: React.FC = () => {
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const text = textToSend || input;
     if (!text.trim()) return;
 
@@ -41,13 +43,16 @@ export const AIChatPage: React.FC = () => {
     if (!textToSend) setInput('');
     setThinking(true);
 
-    setTimeout(() => {
-      let aiText = "I have analyzed your request against current company data. All 4 branches (Mumbai HQ, Bengaluru Tech Hub, New Delhi, Pune) are currently active with a 93.8% attendance rate today.";
-      if (text.toLowerCase().includes('report') || text.toLowerCase().includes('audit')) {
-        aiText = "Based on Virtual Manager AI report auditing, 2 daily work reports were flagged today for low detail scores. You can review them in the AI Report Auditing section.";
-      } else if (text.toLowerCase().includes('leave')) {
-        aiText = "There are 4 pending leave applications awaiting approval in the Leave Management Portal. Casual Leave quota usage is currently within normal thresholds.";
-      }
+    try {
+      const chatHistory = messages.concat(userMsg).map(m => ({
+        role: m.sender === 'user' ? ('user' as const) : ('assistant' as const),
+        content: m.text,
+      }));
+
+      const aiText = await chatWithAI(chatHistory, {
+        companyName: company?.name || 'Acme Global Enterprises',
+        employeeRole: user?.role || 'employee',
+      });
 
       const aiMsg: Message = {
         id: `m-${Date.now() + 1}`,
@@ -57,8 +62,11 @@ export const AIChatPage: React.FC = () => {
       };
 
       setMessages(prev => [...prev, aiMsg]);
+    } catch (err: any) {
+      toast.error('Failed to receive response from AI Assistant');
+    } finally {
       setThinking(false);
-    }, 1000);
+    }
   };
 
   return (

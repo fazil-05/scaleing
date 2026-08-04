@@ -169,8 +169,8 @@ export const AIChatWidget: React.FC = () => {
           companyName: company?.name || 'Acme Global Enterprises',
           sopContent: sopText,
           employeeRole: user?.role,
-          totalEmployees: empCount || 4,
-          pendingTasksCount: taskCount || 4,
+          totalEmployees: empCount ?? 0,
+          pendingTasksCount: taskCount ?? 0,
         }
       );
 

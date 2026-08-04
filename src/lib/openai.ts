@@ -229,30 +229,59 @@ Provide concise, helpful, professional enterprise answers.`;
 
 // ─── Smart Fallback Response Generator ────────────────────
 function generateSmartFallbackResponse(prompt: string, context: ChatContext): string {
-  const query = prompt.toLowerCase();
+  const query = prompt.toLowerCase().trim();
   const company = context.companyName || 'Acme Global Enterprises';
   const totalEmp = context.totalEmployees ?? 4;
   const presentCount = context.todayPresent ?? Math.min(totalEmp, 3);
   const pendingTasks = context.pendingTasksCount ?? 4;
 
-  if (query.includes('employee') || query.includes('staff') || query.includes('how many') || query.includes('total') || query.includes('count')) {
-    return `There are currently ${totalEmp} active registered employees in ${company} across all branch locations.`;
+  // Greetings & casual chat
+  if (/^(hi|hii|hiii|hello|hey|heyy|greetings|good morning|good afternoon|good evening)/i.test(query)) {
+    return `Hello! 👋 I'm your Virtual Manager AI Assistant for **${company}**. I'm here to help you manage employees, check attendance, review tasks, or answer policy questions. What would you like to check today?`;
   }
 
-  if (query.includes('attendance') || query.includes('present') || query.includes('absent') || query.includes('check')) {
-    return `Today's attendance status for ${company}:\n• Present: ${presentCount} employees\n• On Field / Remote: ${totalEmp - presentCount} employees\n• Unexcused Absences: 0\nAll location checks are verified via GPS geofencing.`;
+  // How are you / Status questions
+  if (query.includes('how are you') || query.includes('how r u') || query.includes('how is it going') || query.includes("what's up") || query.includes('how u doing')) {
+    return `I'm doing great and running at 100% capacity! 🚀 All real-time tracking modules for **${company}** are operational. Currently, ${totalEmp} staff profiles and ${pendingTasks} workspace tasks are active in your portal. How can I assist you right now?`;
   }
 
-  if (query.includes('task') || query.includes('milestone') || query.includes('work') || query.includes('assign')) {
-    return `There are currently ${pendingTasks} active tasks in ${company}'s workspace pipeline.`;
+  // Who are you / Identity
+  if (query.includes('who are you') || query.includes('what are you') || query.includes('your name')) {
+    return `I am **Virtual Manager AI**, your automated corporate operations assistant. I monitor employee check-ins, perform AI quality audits on daily work reports, assist with task assignments, and answer SOP guidelines for **${company}**.`;
   }
 
-  if (query.includes('sop') || query.includes('policy') || query.includes('rule') || query.includes('guideline') || query.includes('manual')) {
+  // Help & Capabilities
+  if (query.includes('help') || query.includes('what can you do') || query.includes('feature') || query.includes('capability')) {
+    return `Here is how I can assist you:\n\n• 👥 **Employee Directory**: Ask for employee stats, branch roles, or staff counts.\n• 📍 **GPS Attendance**: Check today's present staff, check-in times, and geofence status.\n• 📝 **Daily Reports & AI Audits**: Review daily work logs, AI quality scores, and flagged entries.\n• 🎯 **Tasks**: Inspect pending deliverables and project milestones.\n• 📚 **SOP & Knowledge Base**: Search enterprise policies, leave rules, and operational guidelines.`;
+  }
+
+  // Employee / Staff query
+  if (query.includes('employee') || query.includes('staff') || query.includes('how many') || query.includes('team') || query.includes('roster')) {
+    return `There are currently **${totalEmp} active registered employees** in **${company}** across all corporate branch locations. You can view full details in the Employee Directory.`;
+  }
+
+  // Attendance / GPS query
+  if (query.includes('attendance') || query.includes('present') || query.includes('absent') || query.includes('check') || query.includes('geofence') || query.includes('location')) {
+    return `Today's real-time attendance status for **${company}**:\n• **Present / Verified**: ${presentCount} employees\n• **Field / Remote**: ${Math.max(0, totalEmp - presentCount)} employees\n• **Absences / On Leave**: 0\n\nAll mobile check-ins are verified using GPS location geofencing.`;
+  }
+
+  // Task query
+  if (query.includes('task') || query.includes('milestone') || query.includes('work') || query.includes('assign') || query.includes('todo')) {
+    return `There are currently **${pendingTasks} active tasks** in **${company}**'s workspace pipeline. You can create, reassign, or update task statuses anytime in the Task Management section!`;
+  }
+
+  // Daily Reports & AI Auditing
+  if (query.includes('report') || query.includes('audit') || query.includes('score') || query.includes('flag')) {
+    return `Daily work submissions are automatically audited by Virtual Manager AI for completeness and accuracy. High quality reports receive high scores, while incomplete or repetitive entries are flagged for executive review under **AI Report Auditing**.`;
+  }
+
+  // SOP / Policy query
+  if (query.includes('sop') || query.includes('policy') || query.includes('rule') || query.includes('guideline') || query.includes('manual') || query.includes('leave')) {
     if (context.sopContent) {
-      return `Here are key SOP guidelines from the knowledge base:\n\n${context.sopContent}`;
+      return `Here are key guidelines from the SOP Knowledge Base:\n\n${context.sopContent}`;
     }
-    return `Standard Operating Procedures (SOPs) for ${company} are available in the SOP Knowledge Base.`;
+    return `Standard Operating Procedures (SOPs) and leave policies for **${company}** can be searched and reviewed in the **SOP Knowledge Base** tab.`;
   }
 
-  return `As your Virtual Manager AI Assistant for ${company}, I am monitoring real-time operations. Currently, all ${totalEmp} employee profiles and task pipelines are active. Let me know if you need specific information!`;
+  return `I understand you're asking about "${prompt}". As your Virtual Manager AI Assistant for **${company}**, I can help you inspect employee stats, check attendance, review task progress, or consult SOP guidelines. Let me know what specific details you'd like!`;
 }
