@@ -25,6 +25,7 @@ const LiveMapPage = lazy(() => import('./pages/attendance/LiveMapPage').then(m =
 const DailyReportPage = lazy(() => import('./pages/reports/DailyReportPage').then(m => ({ default: m.DailyReportPage })));
 const TasksPage = lazy(() => import('./pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })));
 const SOPLibraryPage = lazy(() => import('./pages/sops/SOPLibraryPage').then(m => ({ default: m.SOPLibraryPage })));
+const ResourceCenterPage = lazy(() => import('./pages/resources/ResourceCenterPage').then(m => ({ default: m.ResourceCenterPage })));
 const LeaveRequestsPage = lazy(() => import('./pages/leaves/LeaveRequestsPage').then(m => ({ default: m.LeaveRequestsPage })));
 const PerformancePage = lazy(() => import('./pages/performance/PerformancePage').then(m => ({ default: m.PerformancePage })));
 const CompanySettingsPage = lazy(() => import('./pages/settings/CompanySettingsPage').then(m => ({ default: m.CompanySettingsPage })));
@@ -101,7 +102,7 @@ function AppRoutes() {
         <Route path="/reports/audit" element={<Suspense fallback={<PageLoader />}><DailyReportPage /></Suspense>} />
         <Route path="/tasks" element={<Suspense fallback={<PageLoader />}><TasksPage /></Suspense>} />
         <Route path="/sops" element={<Suspense fallback={<PageLoader />}><SOPLibraryPage /></Suspense>} />
-        <Route path="/resources" element={<Suspense fallback={<PageLoader />}><SOPLibraryPage /></Suspense>} />
+        <Route path="/resources" element={<Suspense fallback={<PageLoader />}><ResourceCenterPage /></Suspense>} />
         <Route path="/leaves" element={<Suspense fallback={<PageLoader />}><LeaveRequestsPage /></Suspense>} />
         <Route path="/performance" element={<Suspense fallback={<PageLoader />}><PerformancePage /></Suspense>} />
         <Route path="/chat" element={<Suspense fallback={<PageLoader />}><AIChatPage /></Suspense>} />

@@ -8,7 +8,7 @@ import type { Employee, Branch, Department } from '@/types';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Modal } from '@/components/ui/Modal';
 import {
-  Users, UserPlus, Download, Search, Edit, Trash2, Phone, Mail, Building2, Briefcase
+  Users, UserPlus, FileSpreadsheet, Search, Edit, Trash2, Phone, Mail, Building2, Briefcase
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
@@ -23,7 +23,7 @@ export const EmployeesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('active');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -63,6 +63,8 @@ export const EmployeesPage: React.FC = () => {
       const { data, error } = await query;
       if (!error && data) {
         setEmployees(data as Employee[]);
+      } else {
+        setEmployees([]);
       }
 
       // Load filter metadata
@@ -72,6 +74,7 @@ export const EmployeesPage: React.FC = () => {
       setDepartments((deptData || []) as Department[]);
     } catch (err: any) {
       console.warn('Real employee fetch error:', err);
+      setEmployees([]);
     } finally {
       setLoading(false);
     }
@@ -212,6 +215,14 @@ export const EmployeesPage: React.FC = () => {
     }
   };
 
+  const filteredEmployees = employees.filter(e => {
+    const matchesBranch = !branchFilter || e.branch_id === branchFilter;
+    const matchesRole = !roleFilter || e.role === roleFilter;
+    const matchesStatus = !statusFilter || e.status === statusFilter;
+    const matchesSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.email.toLowerCase().includes(search.toLowerCase()) || e.employee_code.toLowerCase().includes(search.toLowerCase());
+    return matchesBranch && matchesRole && matchesStatus && matchesSearch;
+  });
+
   return (
     <div className="space-y-6">
       {/* Top Header & Actions */}
@@ -225,7 +236,7 @@ export const EmployeesPage: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <button onClick={handleExportExcel} className="btn btn-secondary text-xs">
-            <Download size={14} /> Export Excel
+            <FileSpreadsheet size={14} /> Export Excel
           </button>
           <button onClick={handleOpenAddModal} className="btn btn-primary text-xs">
             <UserPlus size={14} /> Add Employee
@@ -298,14 +309,14 @@ export const EmployeesPage: React.FC = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-xs text-slate-500">Loading directory...</td>
+                <td colSpan={7} className="text-center py-8 text-slate-500">Loading employees...</td>
               </tr>
-            ) : employees.length === 0 ? (
+            ) : filteredEmployees.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-xs text-slate-500">No employees found</td>
+                <td colSpan={7} className="text-center py-8 text-slate-500">No employees match the selected filters</td>
               </tr>
             ) : (
-              employees.map(emp => (
+              filteredEmployees.map(emp => (
                 <tr key={emp.id}>
                   <td>
                     <div className="flex items-center gap-3">

@@ -21,14 +21,6 @@ const KANBAN_COLUMNS: { id: TaskStatus; label: string }[] = [
   { id: 'blocked', label: 'Blocked' },
 ];
 
-const DEMO_EMPLOYEES: Partial<Employee>[] = [
-  { id: 'a0000000-0000-0000-0000-000000000004', name: 'Sophia Sterling', employee_code: 'EMP-004', role: 'employee' },
-  { id: 'a0000000-0000-0000-0000-000000000003', name: 'Marcus Vance', employee_code: 'EMP-003', role: 'branch_manager' },
-  { id: 'a0000000-0000-0000-0000-000000000002', name: 'Elena Rostova', employee_code: 'EMP-002', role: 'director' },
-  { id: 'a0000000-0000-0000-0000-000000000001', name: 'Alexander Pierce', employee_code: 'EMP-001', role: 'super_admin' },
-];
-
-
 export const TasksPage: React.FC = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -36,7 +28,7 @@ export const TasksPage: React.FC = () => {
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
 
   // Employee list for assignment dropdown
-  const [employees, setEmployees] = useState<Partial<Employee>[]>(DEMO_EMPLOYEES);
+  const [employees, setEmployees] = useState<Partial<Employee>[]>([]);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [title, setTitle] = useState('');
@@ -59,10 +51,10 @@ export const TasksPage: React.FC = () => {
         .select('id, name, employee_code, role')
         .eq('company_id', user.company_id);
 
-      if (empData && empData.length > 0) {
+      if (empData) {
         setEmployees(empData as Partial<Employee>[]);
       } else {
-        setEmployees(DEMO_EMPLOYEES);
+        setEmployees([]);
       }
 
       let query = supabase
@@ -94,6 +86,12 @@ export const TasksPage: React.FC = () => {
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.company_id || !user?.id) return;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dueDate && dueDate < todayStr) {
+      toast.error('Task due date cannot be in the past');
+      return;
+    }
 
     try {
       const { error } = await supabase.from('tasks').insert({
@@ -352,6 +350,7 @@ export const TasksPage: React.FC = () => {
               <label className="form-label">Due Date</label>
               <input
                 type="date"
+                min={new Date().toISOString().split('T')[0]}
                 value={dueDate}
                 onChange={e => setDueDate(e.target.value)}
                 className="form-input text-xs"

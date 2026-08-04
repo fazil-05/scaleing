@@ -19,6 +19,26 @@ export interface ChatContext {
   pendingTasksCount?: number;
 }
 
+// ─── Fetch with Timeout Helper ─────────────────────────────
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 10000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error('API_TIMEOUT');
+    }
+    throw err;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 // ─── Google Gemini API Handler ───────────────────────────
 async function callGeminiAPI(prompt: string, systemPrompt?: string): Promise<string> {
   const apiKey = GEMINI_API_KEY;
@@ -33,13 +53,13 @@ async function callGeminiAPI(prompt: string, systemPrompt?: string): Promise<str
     }
   ];
 
-  // Try gemini-2.0-flash first
+  // Try gemini-2.0-flash first with 10s timeout
   const primaryUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-  const response = await fetch(primaryUrl, {
+  const response = await fetchWithTimeout(primaryUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ contents }),
-  });
+  }, 10000);
 
   if (response.ok) {
     const data = await response.json();
@@ -49,11 +69,11 @@ async function callGeminiAPI(prompt: string, systemPrompt?: string): Promise<str
 
   // Fallback to gemini-1.5-flash if 2.0-flash is unavailable
   const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  const resFallback = await fetch(fallbackUrl, {
+  const resFallback = await fetchWithTimeout(fallbackUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ contents }),
-  });
+  }, 10000);
 
   if (!resFallback.ok) {
     const errorJson = await resFallback.json().catch(() => ({}));
@@ -72,14 +92,14 @@ async function openAIRequest(endpoint: string, body: Record<string, unknown>) {
     throw new Error('NOT_OPENAI_KEY');
   }
 
-  const response = await fetch(`${OPENAI_URL}${endpoint}`, {
+  const response = await fetchWithTimeout(`${OPENAI_URL}${endpoint}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${OPENAI_API_KEY}`,
     },
     body: JSON.stringify(body),
-  });
+  }, 10000);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));

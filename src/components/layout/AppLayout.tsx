@@ -7,6 +7,7 @@ import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { GlobalSearch } from './GlobalSearch';
 import { AIChatWidget } from '@/components/ai/AIChatWidget';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { trackPageView } from '@/lib/analytics';
 
 export const AppLayout: React.FC = () => {
@@ -44,7 +45,9 @@ export const AppLayout: React.FC = () => {
 
         {/* Dynamic Page Content */}
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
-          <Outlet />
+          <ErrorBoundary key={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
 

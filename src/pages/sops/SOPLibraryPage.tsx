@@ -22,61 +22,6 @@ export const SOPLibraryPage: React.FC = () => {
       return;
     }
 
-const DEMO_CATEGORIES: SOPCategory[] = [
-  { id: 'cat-1', company_id: 'c0000000-0000-0000-0000-000000000001', name: 'Operations', icon: '⚡', description: 'Daily office operations & GPS geofencing guidelines', sort_order: 1, created_at: new Date().toISOString() },
-  { id: 'cat-2', company_id: 'c0000000-0000-0000-0000-000000000001', name: 'HR & Compliance', icon: '📋', description: 'Employee handbook, leave policy & code of conduct', sort_order: 2, created_at: new Date().toISOString() },
-  { id: 'cat-3', company_id: 'c0000000-0000-0000-0000-000000000001', name: 'Sales & Field Protocols', icon: '🎯', description: 'Client meeting reports & daily submission standard', sort_order: 3, created_at: new Date().toISOString() },
-  { id: 'cat-4', company_id: 'c0000000-0000-0000-0000-000000000001', name: 'IT & Security', icon: '🔒', description: 'Data privacy, passwords & remote work security', sort_order: 4, created_at: new Date().toISOString() },
-];
-
-const DEMO_SOPS: SOP[] = [
-  {
-    id: 'sop-1',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    category_id: 'cat-1',
-    created_by: 'e0000000-0000-0000-0000-000000000001',
-    title: 'GPS Attendance Check-In & Geofence Verification Protocol',
-    content: 'All field and office staff must enable device location when marking daily attendance. Attendance marked within 200m of assigned branch geofence radius will be auto-verified as On-Site.',
-    summary: 'Rules and distance thresholds for daily GPS mobile check-ins.',
-    tags: ['attendance', 'gps', 'geofence'],
-    version: '2.1',
-    is_published: true,
-    view_count: 142,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'sop-2',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    category_id: 'cat-3',
-    created_by: 'e0000000-0000-0000-0000-000000000002',
-    title: 'Daily Work Report Submission & AI Audit Standard',
-    content: 'Reports must be submitted daily before 7:00 PM IST detailing client interactions, products discussed, and key achievements. Submissions are audited by Virtual Manager AI for completeness and clarity.',
-    summary: 'Standardized format for daily activity reporting and score thresholds.',
-    tags: ['report', 'ai-audit', 'daily-work'],
-    version: '1.4',
-    is_published: true,
-    view_count: 98,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'sop-3',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    category_id: 'cat-2',
-    created_by: 'e0000000-0000-0000-0000-000000000002',
-    title: 'Paid Leave Application & Branch Manager Approval Chain',
-    content: 'Leave requests exceeding 3 consecutive days require documentation and approval from both Branch Manager and HR Director at least 48 hours prior to leave start date.',
-    summary: 'Leave policy guidelines, notice periods, and approval escalation workflow.',
-    tags: ['leave', 'hr', 'approval'],
-    version: '3.0',
-    is_published: true,
-    view_count: 215,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-];
-
     const loadSOPs = async () => {
       setLoading(true);
       try {

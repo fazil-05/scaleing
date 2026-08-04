@@ -88,6 +88,17 @@ export const LeaveRequestsPage: React.FC = () => {
       return;
     }
 
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (formData.fromDate < todayStr) {
+      toast.error('Leave start date cannot be in the past');
+      return;
+    }
+
+    if (formData.toDate < formData.fromDate) {
+      toast.error('Leave end date cannot be before start date');
+      return;
+    }
+
     const start = new Date(formData.fromDate);
     const end = new Date(formData.toDate);
     const diffTime = Math.abs(end.getTime() - start.getTime());
@@ -267,6 +278,7 @@ export const LeaveRequestsPage: React.FC = () => {
               <input
                 type="date"
                 required
+                min={new Date().toISOString().split('T')[0]}
                 value={formData.fromDate}
                 onChange={e => setFormData({ ...formData, fromDate: e.target.value })}
                 className="form-input text-xs"
@@ -277,6 +289,7 @@ export const LeaveRequestsPage: React.FC = () => {
               <input
                 type="date"
                 required
+                min={formData.fromDate || new Date().toISOString().split('T')[0]}
                 value={formData.toDate}
                 onChange={e => setFormData({ ...formData, toDate: e.target.value })}
                 className="form-input text-xs"

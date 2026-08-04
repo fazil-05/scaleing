@@ -176,9 +176,17 @@ export const AIChatWidget: React.FC = () => {
 
       setMessages(prev => [...prev, { role: 'assistant', content: response }]);
     } catch (err: any) {
+      console.error('AI Chat Error:', err);
+      const isTimeout = err?.message === 'API_TIMEOUT' || err?.message?.includes('timeout');
+      const errorMessage = isTimeout
+        ? '⚠️ Request timed out. The AI service took too long to respond. Please try again.'
+        : '⚠️ Virtual Manager AI Assistant is experiencing high traffic. Please try again in a moment.';
+
+      toast.error(isTimeout ? 'AI Request timed out' : 'Failed to fetch AI response');
+
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: `Virtual Manager AI Assistant is active and ready.` }
+        { role: 'assistant', content: errorMessage }
       ]);
     } finally {
       setLoading(false);

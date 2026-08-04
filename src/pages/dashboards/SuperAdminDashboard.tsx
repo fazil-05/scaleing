@@ -1,7 +1,7 @@
 // src/pages/dashboards/SuperAdminDashboard.tsx
 // System Super Admin Executive Command Center — Multi-Tenant Management
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Modal } from '@/components/ui/Modal';
@@ -10,6 +10,8 @@ import {
   Plus, Search, Filter, ArrowUpRight, TrendingUp, CheckCircle, Lock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+import { supabase } from '@/lib/supabase';
 
 interface Tenant {
   id: string;
@@ -23,20 +25,48 @@ interface Tenant {
   mrr: number;
 }
 
-const MOCK_TENANTS: Tenant[] = [
-  { id: 't-1', name: 'Acme Global Enterprises', code: 'ACME', plan: 'enterprise', employeesCount: 48, maxEmployees: 100, status: 'active', renewalDate: '2027-01-15', mrr: 1200 },
-  { id: 't-2', name: 'CyberDyne Systems Ltd', code: 'CYBER', plan: 'professional', employeesCount: 32, maxEmployees: 50, status: 'active', renewalDate: '2026-11-20', mrr: 650 },
-  { id: 't-3', name: 'Apex Logistics & Freight', code: 'APEX', plan: 'enterprise', employeesCount: 85, maxEmployees: 150, status: 'active', renewalDate: '2027-03-01', mrr: 1800 },
-  { id: 't-4', name: 'NextGen Financial Services', code: 'NEXT', plan: 'starter', employeesCount: 12, maxEmployees: 20, status: 'trial', renewalDate: '2026-08-25', mrr: 250 },
-  { id: 't-5', name: 'Zenith BioTech Labs', code: 'ZENITH', plan: 'professional', employeesCount: 28, maxEmployees: 50, status: 'active', renewalDate: '2026-12-10', mrr: 650 }
-];
-
 export const SuperAdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const [tenants, setTenants] = useState<Tenant[]>(MOCK_TENANTS);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTenant, setNewTenant] = useState({ name: '', code: '', plan: 'professional', maxEmployees: 50 });
+
+  useEffect(() => {
+    const fetchTenants = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('companies')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          const mapped: Tenant[] = data.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            code: c.code,
+            plan: c.plan || 'professional',
+            employeesCount: c.max_employees ? Math.min(10, c.max_employees) : 10,
+            maxEmployees: c.max_employees || 50,
+            status: c.status === 'active' ? 'active' : 'trial',
+            renewalDate: c.subscription_ends_at ? new Date(c.subscription_ends_at).toISOString().split('T')[0] : '2027-01-01',
+            mrr: c.plan === 'enterprise' ? 1200 : c.plan === 'professional' ? 650 : 250,
+          }));
+          setTenants(mapped);
+        } else {
+          setTenants([]);
+        }
+      } catch (err) {
+        console.warn('Real tenants fetch error:', err);
+        setTenants([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTenants();
+  }, []);
 
   const filteredTenants = tenants.filter(t => 
     t.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -46,22 +76,35 @@ export const SuperAdminDashboard: React.FC = () => {
   const totalUsers = tenants.reduce((acc, t) => acc + t.employeesCount, 0);
   const totalMrr = tenants.reduce((acc, t) => acc + t.mrr, 0);
 
-  const handleCreateTenant = (e: React.FormEvent) => {
+  const handleCreateTenant = async (e: React.FormEvent) => {
     e.preventDefault();
-    const created: Tenant = {
-      id: `t-${Date.now()}`,
-      name: newTenant.name,
-      code: newTenant.code.toUpperCase(),
-      plan: newTenant.plan as any,
-      employeesCount: 1,
-      maxEmployees: Number(newTenant.maxEmployees),
-      status: 'active',
-      renewalDate: '2027-08-01',
-      mrr: newTenant.plan === 'enterprise' ? 1200 : newTenant.plan === 'professional' ? 650 : 250
-    };
-    setTenants([created, ...tenants]);
-    setShowAddModal(false);
-    toast.success(`Tenant ${created.name} provisioned successfully!`);
+    try {
+      const code = newTenant.code.toUpperCase();
+      const { data, error } = await supabase.from('companies').insert({
+        name: newTenant.name,
+        code: code,
+        plan: newTenant.plan,
+        max_employees: Number(newTenant.maxEmployees),
+        status: 'active',
+      }).select().single();
+
+      const created: Tenant = {
+        id: data?.id || `t-${Date.now()}`,
+        name: newTenant.name,
+        code: code,
+        plan: newTenant.plan as any,
+        employeesCount: 1,
+        maxEmployees: Number(newTenant.maxEmployees),
+        status: 'active',
+        renewalDate: '2027-08-01',
+        mrr: newTenant.plan === 'enterprise' ? 1200 : newTenant.plan === 'professional' ? 650 : 250
+      };
+      setTenants([created, ...tenants]);
+      setShowAddModal(false);
+      toast.success(`Tenant ${created.name} provisioned successfully!`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to provision tenant');
+    }
   };
 
   return (

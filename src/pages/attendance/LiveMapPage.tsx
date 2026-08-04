@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Navigation, MapPin, ShieldCheck, Clock, RefreshCw, CheckCircle, Radio } from 'lucide-react';
 
+import { supabase } from '@/lib/supabase';
+
 interface LiveCheckIn {
   id: string;
   name: string;
@@ -19,15 +21,57 @@ interface LiveCheckIn {
   status: 'verified' | 'flagged';
 }
 
-const MOCK_LIVE_FEED: LiveCheckIn[] = [
-  { id: 'lc-1', name: 'Alexander Pierce', code: 'EMP-001', branch: 'Headquarters — Mumbai', time: '08:52 AM', lat: 19.0661, lng: 72.8682, distance: '45m from center', accuracy: '±6m', status: 'verified' },
-  { id: 'lc-2', name: 'Eleanor Vance', code: 'EMP-002', branch: 'Headquarters — Mumbai', time: '09:05 AM', lat: 19.0664, lng: 72.8680, distance: '12m from center', accuracy: '±4m', status: 'verified' },
-  { id: 'lc-3', name: 'Marcus Brody', code: 'EMP-003', branch: 'Headquarters — Mumbai', time: '08:45 AM', lat: 19.0658, lng: 72.8685, distance: '80m from center', accuracy: '±8m', status: 'verified' },
-  { id: 'lc-4', name: 'Sophia Sterling', code: 'EMP-004', branch: 'Headquarters — Mumbai', time: '09:22 AM', lat: 19.0670, lng: 72.8690, distance: '110m from center', accuracy: '±10m', status: 'verified' },
-  { id: 'lc-5', name: 'Rohan Sharma', code: 'EMP-005', branch: 'Tech Hub — Bengaluru', time: '09:00 AM', lat: 12.9261, lng: 77.6843, distance: 'WFH Verified', accuracy: '±12m', status: 'verified' },
-];
-
 export const LiveMapPage: React.FC = () => {
+  const { user } = useAuth();
+  const [feed, setFeed] = React.useState<LiveCheckIn[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!user?.company_id) return;
+    const fetchAttendanceFeed = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('attendance')
+          .select(`
+            id,
+            date,
+            check_in_time,
+            distance_meters,
+            is_inside_geofence,
+            employees:employee_id(name, employee_code)
+          `)
+          .eq('company_id', user.company_id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (!error && data) {
+          const mapped: LiveCheckIn[] = data.map((a: any) => ({
+            id: a.id,
+            name: a.employees?.name || 'Staff Member',
+            code: a.employees?.employee_code || 'EMP-000',
+            branch: 'Assigned Branch',
+            time: a.check_in_time ? new Date(a.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today',
+            lat: 19.0661,
+            lng: 72.8682,
+            distance: a.distance_meters ? `${a.distance_meters}m from center` : 'Inside Geofence',
+            accuracy: '±5m',
+            status: a.is_inside_geofence ? 'verified' : 'flagged',
+          }));
+          setFeed(mapped);
+        } else {
+          setFeed([]);
+        }
+      } catch (err) {
+        console.warn('Real live feed fetch error:', err);
+        setFeed([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAttendanceFeed();
+  }, [user?.company_id]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -40,9 +84,9 @@ export const LiveMapPage: React.FC = () => {
             <span className="text-xs text-slate-400">Real-Time Geofencing</span>
           </div>
           <h2 className="text-2xl font-extrabold text-slate-900 mt-1 flex items-center gap-2">
-            <Navigation size={24} className="text-emerald-600" /> GPS Geofence & Check-In Log Stream
+            <Navigation size={24} className="text-emerald-600" /> GPS Geofence &amp; Check-In Log Stream
           </h2>
-          <p className="text-sm text-slate-500 mt-0.5">Real-time mobile GPS check-in verification feed & distance calculations</p>
+          <p className="text-sm text-slate-500 mt-0.5">Real-time mobile GPS check-in verification feed &amp; distance calculations</p>
         </div>
       </div>
 
@@ -54,7 +98,7 @@ export const LiveMapPage: React.FC = () => {
             <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <MapPin size={18} className="text-blue-600" /> Active Geofence Radar View
             </h3>
-            <span className="text-xs text-slate-400 font-semibold">Updated 5s ago</span>
+            <span className="text-xs text-slate-400 font-semibold">Updated live</span>
           </div>
 
           <div className="h-80 bg-slate-900 rounded-xl relative overflow-hidden border border-slate-800 flex items-center justify-center p-6 text-center">
@@ -69,7 +113,7 @@ export const LiveMapPage: React.FC = () => {
               </div>
               <h4 className="text-white font-bold text-sm">GPS Geofence Radar Operational</h4>
               <p className="text-slate-400 text-xs max-w-sm">
-                4 Branches Active • Geofence Radius: 200m • GPS Accuracy Threshold: ±15m
+                Real-Time GPS Mobile Location Verification &amp; Geofence Monitoring
               </p>
             </div>
           </div>
@@ -82,19 +126,25 @@ export const LiveMapPage: React.FC = () => {
           </h3>
 
           <div className="space-y-3">
-            {MOCK_LIVE_FEED.map(f => (
-              <div key={f.id} className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
-                <div className="flex items-center justify-between font-bold text-xs text-slate-900">
-                  <span>{f.name}</span>
-                  <span className="text-[10px] font-mono text-emerald-600 font-semibold">{f.time}</span>
+            {loading ? (
+              <div className="p-4 text-center text-xs text-slate-500">Loading check-ins...</div>
+            ) : feed.length === 0 ? (
+              <div className="p-4 text-center text-xs text-slate-500">No GPS check-ins recorded today.</div>
+            ) : (
+              feed.map(f => (
+                <div key={f.id} className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+                  <div className="flex items-center justify-between font-bold text-xs text-slate-900">
+                    <span>{f.name}</span>
+                    <span className="text-[10px] font-mono text-emerald-600 font-semibold">{f.time}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-500">{f.branch}</div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold pt-1 border-t border-slate-100">
+                    <span>{f.distance}</span>
+                    <span className="text-slate-500">Acc: {f.accuracy}</span>
+                  </div>
                 </div>
-                <div className="text-[11px] text-slate-500">{f.branch}</div>
-                <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold pt-1 border-t border-slate-100">
-                  <span>{f.distance}</span>
-                  <span className="text-slate-500">Acc: {f.accuracy}</span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

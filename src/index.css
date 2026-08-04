@@ -310,24 +310,26 @@ body {
   text-transform: uppercase;
 }
 
-.badge-present  { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-.badge-late     { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-.badge-absent   { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
-.badge-half_day { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-.badge-leave    { background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; }
-.badge-holiday  { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
-.badge-weekend  { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
-.badge-work_from_home { background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; }
-.badge-pending  { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-.badge-approved { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-.badge-rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
-.badge-active   { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-.badge-inactive { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
-.badge-completed { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-.badge-in_progress { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-.badge-assigned { background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; }
-.badge-blocked  { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
-.badge-cancelled { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+.badge-present        { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.badge-late           { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.badge-absent         { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.badge-half_day       { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+.badge-leave          { background: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+.badge-holiday        { background: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8; }
+.badge-weekend        { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+.badge-work_from_home { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
+.badge-pending        { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.badge-approved       { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.badge-rejected       { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.badge-active         { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.badge-inactive       { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+.badge-terminated     { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.badge-completed      { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.badge-in_progress    { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+.badge-assigned       { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.badge-blocked        { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.badge-cancelled      { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+.badge-flagged        { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
 /* ── Stats Card ──────────────────────────────────────────── */
 .stat-card {

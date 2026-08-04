@@ -9,7 +9,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Modal } from '@/components/ui/Modal';
 import {
   Building2, Plus, Search, MapPin, Phone, Mail,
-  Clock, Shield, Download, Edit, Trash2, Users, Navigation, LayoutGrid, List
+  Clock, Shield, FileSpreadsheet, Edit, Trash2, Users, Navigation, LayoutGrid, List
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
@@ -60,9 +60,12 @@ export const BranchesPage: React.FC = () => {
       const { data, error } = await query;
       if (!error && data) {
         setBranches(data as Branch[]);
+      } else {
+        setBranches([]);
       }
     } catch (err) {
       console.warn('Real branches fetch error:', err);
+      setBranches([]);
     } finally {
       setLoading(false);
     }
@@ -212,6 +215,13 @@ export const BranchesPage: React.FC = () => {
 
   const cities = Array.from(new Set(branches.map(b => b.city).filter(Boolean)));
 
+  const filteredBranches = branches.filter(b => {
+    const matchesCity = !cityFilter || b.city.toLowerCase() === cityFilter.toLowerCase() || b.name.toLowerCase().includes(cityFilter.toLowerCase());
+    const matchesStatus = !statusFilter || b.status === statusFilter;
+    const matchesSearch = !search || b.name.toLowerCase().includes(search.toLowerCase()) || b.code.toLowerCase().includes(search.toLowerCase()) || b.city.toLowerCase().includes(search.toLowerCase());
+    return matchesCity && matchesStatus && matchesSearch;
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -228,7 +238,7 @@ export const BranchesPage: React.FC = () => {
             onClick={handleExportExcel}
             className="flex items-center gap-2 px-4 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 font-semibold text-xs transition-all shadow-xs"
           >
-            <Download size={15} /> Export Excel
+            <FileSpreadsheet size={15} /> Export Excel
           </button>
 
           {canManageBranches && (
@@ -301,15 +311,15 @@ export const BranchesPage: React.FC = () => {
         <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-slate-200">
           <div className="w-8 h-8 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
-      ) : branches.length === 0 ? (
+      ) : filteredBranches.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center space-y-3">
           <Building2 size={36} className="mx-auto text-slate-300" />
           <h3 className="font-bold text-slate-700 text-sm">No Branch Offices Found</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">Click "Add New Branch" above to register your branch locations and geofence radii.</p>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">Try adjusting your region or status filter.</p>
         </div>
       ) : viewMode === 'cards' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5">
-          {branches.map(b => (
+          {filteredBranches.map(b => (
             <div key={b.id} className="bg-white border border-slate-200/90 rounded-2xl p-5 hover:border-blue-300 hover:shadow-md transition-all space-y-4 relative group">
               <div className="flex items-start justify-between">
                 <div>
@@ -383,7 +393,7 @@ export const BranchesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {branches.map(b => (
+              {filteredBranches.map(b => (
                 <tr key={b.id} className="hover:bg-slate-50/80 transition-all">
                   <td className="px-6 py-4 font-mono font-bold text-blue-600">{b.code}</td>
                   <td className="px-6 py-4 font-semibold text-slate-900">{b.name}</td>

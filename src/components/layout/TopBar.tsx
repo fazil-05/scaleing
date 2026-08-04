@@ -7,8 +7,9 @@ import { supabase } from '@/lib/supabase';
 import type { Notification } from '@/types';
 import {
   Search, Bell, LogOut, User,
-  Clock, Calendar, AlertCircle, Check
+  Clock, Calendar, AlertCircle, Check, Building2
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TopBarProps {
@@ -16,37 +17,31 @@ interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ onOpenSearch }) => {
-  const { user, company, logout } = useAuth();
+  const { user, company, logout, activeBranchId, setActiveBranchId } = useAuth();
 
+  const [branches, setBranches] = useState<Array<{ id: string; name: string }>>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-const DEMO_NOTIFICATIONS: Notification[] = [
-  {
-    id: 'n-1',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    user_id: 'e0000000-0000-0000-0000-000000000001',
-    title: 'Daily Report Flagged for Review',
-    message: 'Work report from Sophia Sterling was flagged by AI Auditor for low detail score.',
-    type: 'ai_alert',
-    priority: 'high',
-    is_read: false,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'n-2',
-    company_id: 'c0000000-0000-0000-0000-000000000001',
-    user_id: 'e0000000-0000-0000-0000-000000000001',
-    title: 'Branch Geofence Check-In Success',
-    message: '38 employees successfully checked in via GPS location today.',
-    type: 'attendance',
-    priority: 'normal',
-    is_read: true,
-    created_at: new Date().toISOString(),
-  }
-];
+  useEffect(() => {
+    if (!user?.company_id) return;
+    const loadBranches = async () => {
+      try {
+        const { data } = await supabase
+          .from('branches')
+          .select('id, name')
+          .eq('company_id', user.company_id);
+        if (data) {
+          setBranches(data);
+        }
+      } catch (err) {
+        console.warn('Branch fetch error:', err);
+      }
+    };
+    loadBranches();
+  }, [user?.company_id]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -60,16 +55,16 @@ const DEMO_NOTIFICATIONS: Notification[] = [
           .order('created_at', { ascending: false })
           .limit(10);
 
-        if (data && data.length > 0) {
+        if (data) {
           setNotifications(data as Notification[]);
           setUnreadCount(data.filter(n => !n.is_read).length);
         } else {
-          setNotifications(DEMO_NOTIFICATIONS);
-          setUnreadCount(1);
+          setNotifications([]);
+          setUnreadCount(0);
         }
       } catch (err) {
-        setNotifications(DEMO_NOTIFICATIONS);
-        setUnreadCount(1);
+        setNotifications([]);
+        setUnreadCount(0);
       }
     };
 
@@ -99,6 +94,25 @@ const DEMO_NOTIFICATIONS: Notification[] = [
 
       {/* Right Actions */}
       <div className="flex items-center gap-3">
+        {/* Branch Selector Dropdown */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700">
+          <Building2 size={14} className="text-blue-600 shrink-0" />
+          <select
+            value={activeBranchId || branches[0]?.id}
+            onChange={e => {
+              const selectedId = e.target.value;
+              setActiveBranchId(selectedId);
+              const branchObj = branches.find(b => b.id === selectedId);
+              toast.success(`Active branch switched to ${branchObj?.name || 'selected branch'}`);
+            }}
+            className="bg-transparent border-none text-xs font-bold text-slate-800 outline-none cursor-pointer pr-1"
+          >
+            {branches.map(b => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Notifications Dropdown */}
         <div className="relative">
           <button

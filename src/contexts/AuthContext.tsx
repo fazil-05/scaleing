@@ -82,6 +82,8 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
+  activeBranchId: string;
+  setActiveBranchId: (branchId: string) => void;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithMicrosoft: () => Promise<void>;
@@ -182,13 +184,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadUserProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
+    const lowerEmail = email.toLowerCase();
+    
+    // Check if logging in with demo credentials
+    if (MOCK_EMPLOYEES[lowerEmail]) {
+      const demoEmp = MOCK_EMPLOYEES[lowerEmail];
+      localStorage.setItem('vm_demo_user', JSON.stringify(demoEmp));
+      localStorage.setItem('vm_demo_company', JSON.stringify(MOCK_COMPANY));
+      setState({
+        user: demoEmp,
+        company: MOCK_COMPANY,
+        session: null,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+      return;
+    }
+
     try {
-      // Try Supabase auth first
+      // Try Supabase auth for registered real accounts
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     } catch (err: any) {
-      // Fallback to Demo Mode if Supabase is placeholder or credentials match demo
-      const demoEmp = MOCK_EMPLOYEES[email.toLowerCase()] || {
+      // Fallback to custom session
+      const fallbackEmp: Employee = {
         id: 'e0000000-0000-0000-0000-000000000999',
         company_id: 'c0000000-0000-0000-0000-000000000001',
         employee_code: 'EMP-999',
@@ -202,11 +221,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updated_at: new Date().toISOString(),
       };
 
-      localStorage.setItem('vm_demo_user', JSON.stringify(demoEmp));
+      localStorage.setItem('vm_demo_user', JSON.stringify(fallbackEmp));
       localStorage.setItem('vm_demo_company', JSON.stringify(MOCK_COMPANY));
 
       setState({
-        user: demoEmp,
+        user: fallbackEmp,
         company: MOCK_COMPANY,
         session: null,
         isAuthenticated: true,
@@ -237,9 +256,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loginAsDemo('director@virtualmanager.ai');
   }, [loginAsDemo]);
 
+  const [activeBranchId, setActiveBranchIdState] = useState<string>(() => {
+    return localStorage.getItem('vm_active_branch_id') || 'b-1';
+  });
+
+  const setActiveBranchId = useCallback((branchId: string) => {
+    setActiveBranchIdState(branchId);
+    localStorage.setItem('vm_active_branch_id', branchId);
+    setState(prev => {
+      if (!prev.user) return prev;
+      const updatedUser = { ...prev.user, branch_id: branchId };
+      localStorage.setItem('vm_demo_user', JSON.stringify(updatedUser));
+      return { ...prev, user: updatedUser };
+    });
+  }, []);
+
   const logout = useCallback(async () => {
     localStorage.removeItem('vm_demo_user');
     localStorage.removeItem('vm_demo_company');
+    localStorage.removeItem('vm_active_branch_id');
     await supabase.auth.signOut().catch(() => {});
     setState({ user: null, company: null, session: null, isAuthenticated: false, isLoading: false });
   }, []);
@@ -256,6 +291,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{
       ...state,
+      activeBranchId,
+      setActiveBranchId,
       login,
       loginWithGoogle,
       loginWithMicrosoft,
